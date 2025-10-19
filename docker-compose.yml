@@ -1,0 +1,42 @@
+services:
+  bot:
+    build: .
+    container_name: myinstants_bot_uz
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=myinstants_bot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - bot_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: myinstants_bot_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=myinstants_bot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bot_network
+
+volumes:
+  postgres_data:
+
+networks:
+  bot_network:
+    driver: bridge
